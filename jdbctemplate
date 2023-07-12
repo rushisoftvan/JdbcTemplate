@@ -1,0 +1,58 @@
+
+
+1) add spring boot-starter-jdbc
+
+2)Row Mapper is interface It is use for  fetching data; It use for convert reseltset to object.we have to take rowmapper of spring jdbc templet	
+  
+for using the row mapper we have crate implemented class of row mapper 
+
+
+we have to create RowMapperImp implements RowMapper<Student>
+{
+
+   we have to give implemention of mapRowMethod(ResultSets ,int rowNum)
+}
+
+
+3)queryforObject method use for to fectching the data(String sql,RowMapper<T>,Object args)
+4)public List<T> query(String sql,RowMapper<T>rowmapper)  
+
+
+
+how to configure multipale database in spring boot application
+
+
+add application.properties 
+give information of database like we have two database give information 
+
+
+to get the database information by using enviroment object
+ 
+
+ 
+we have to create to datasource objcet with configratuion 
+create one configuration class 
+
+
+  DriverManageDatasourse =new DriverManagerDataSource();
+
+
+
+
+jdbctemplate class object as 
+
+***********************************
+java application we have to way to connect with database 
+  1) DriverManager
+  2)DataSourseobject
+
+DriverManagerclass provide a physical connection with database
+DataSourse can provide the logical connection with a database
+Spring jdbc is abstraction level of java jdbc api
+
+Spring use datasourse object to connect with database
+     
+
+
+
+
