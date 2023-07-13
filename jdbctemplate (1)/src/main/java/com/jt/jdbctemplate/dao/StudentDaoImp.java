@@ -1,15 +1,19 @@
 package com.jt.jdbctemplate.dao;
 
+import com.jt.jdbctemplate.Exception.CustomException;
+import com.jt.jdbctemplate.Exception.RecordNotFoundException;
 import com.jt.jdbctemplate.StudentRowMapper;
 import com.jt.jdbctemplate.constants.AppConstants;
-import com.jt.jdbctemplate.pojo.StudentPojo;
+import com.jt.jdbctemplate.dto.response.StudentResponse;
+import com.jt.jdbctemplate.pojo.Student;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Repository
@@ -17,18 +21,23 @@ import java.util.Map;
 @Slf4j
 public class StudentDaoImp implements StudentDao {
 
+    public static final boolean DELETESTATUS = false;
     private final JdbcTemplate jdbcTemplate;
-
+    //RowMapper<StudentResponse> studentRowMapper = new StudentRowMapper();
     @Override
-    public void saveStudent(StudentPojo student) {
+    public Student saveStudent(Student student) {
         /*  update method can be used to perform insert,update,delete operation
-
-
          */
-        int update = this.jdbcTemplate.update(AppConstants.STUDENT_INSERT_QUERY, student.getName(), student.getAge());
+        student.setStatus(true);
+        student.setCreatedOn(LocalDateTime.now());
+        student.setUpdatedOn(LocalDateTime.now());
+        int update = this.jdbcTemplate.update(AppConstants.STUDENT_INSERT_QUERY, student.getName(), student.getAge(),student.getStatus(),student.getCreatedOn(),student.getUpdatedOn());
         log.info("data added :: {}", update);
+        if(update>0){
+            return student;
+        }
+            throw new CustomException("Somthing is wrong");
     }
-
     @Override
     public void findStudentbyId(Integer id) {
         /*
@@ -42,24 +51,49 @@ public class StudentDaoImp implements StudentDao {
     }
 
     @Override
-    public StudentPojo findStudentById(Integer id) {
+    public StudentResponse findStudentById(Integer id) {
         /*
            we will use RowMapper here to convert the result set to row mapper
          */
-        StudentPojo studentPojo = null;
-        RowMapper<StudentPojo> studentRowMapper = new StudentRowMapper();
+        StudentResponse studentResponse = null;
+
         try {
-            studentPojo = this.jdbcTemplate.queryForObject(AppConstants.STUDENT_SELECT_ON, studentRowMapper, id);
-            log.info("student id :: {}", studentPojo.getId());
-            log.info("student name :: {}", studentPojo.getName());
-            log.info("student age : {}", studentPojo.getAge());
-
-
+            studentResponse =  this.jdbcTemplate.queryForObject(AppConstants.STUDENT_SELECT_ON, StudentRowMapper.getInstance(), id);
+            log.info("student id :: {}", studentResponse.getStudentId());
+            log.info("student name :: {}", studentResponse.getStudentName());
+            log.info("student age : {}", studentResponse.getAge());
         } catch (EmptyResultDataAccessException e) {
-            System.out.println(e.getMostSpecificCause());
+            throw new RecordNotFoundException("Student is not available for thid id : "+ id );
         }
-        return studentPojo;
+        return studentResponse;
     }
 
+    @Override
+    public String updateStudent(Integer id, Student student) {
+        int update = this.jdbcTemplate.update(AppConstants.STUDENT_UPDATE, student.getName(), student.getAge(), student.getStatus(), student.getUpdatedOn(), id);
+        if(update>0){
+            return "Data is updated for id : " + id ;
+        }
+        throw new CustomException("somthing is wrong");
 
+    }
+
+    @Override
+    public String deleteStudentById(Integer id) {
+        int update = this.jdbcTemplate.update(AppConstants.STUDENT_DELETE, DELETESTATUS, id);
+        if(update>0){
+            return "Student is deleted for id : "+id;
+        }
+        throw new CustomException("somthing is wrong");
+    }
+
+    @Override
+    public List<StudentResponse> getAllStudent() {
+
+        List<StudentResponse> students = this.jdbcTemplate.query(AppConstants.STUDENT_SELECT_ALL, StudentRowMapper.getInstance());
+       if(students.isEmpty()){
+           throw new RecordNotFoundException("NO any Student available");
+       }
+       return students;
+    }
 }
